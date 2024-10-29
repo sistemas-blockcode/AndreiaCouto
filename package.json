@@ -2,13 +2,12 @@
   "name": "andreiacouto",
   "version": "0.1.0",
   "private": true,
- "scripts": {
-  "dev": "next dev",
-  "build": "prisma generate && next build",
-  "db:push": "prisma db push",
-  "seed": "ts-node --transpile-only prisma/seed.ts",
-  "start": "next start",
-  "lint": "next lint"
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "prisma db push && next start && npx prisma db seed",
+    "lint": "next lint",
+    "seed": "node dist/prisma/seed.js"
 },
   "dependencies": {
     "@emotion/react": "^11.13.3",
