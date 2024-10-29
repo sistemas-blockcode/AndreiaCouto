@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               Int              @id @default(autoincrement())
+  name             String
+  email            String           @unique
+  password         String
+  phone            String    
+  role             Role
+  avatarUrl        String?
+  courses          Course[]         @relation("UserCourses")
+  sentChats        Chat[]           @relation("SenderChats")
+  receivedChats    Chat[]           @relation("ReceiverChats")
+  taughtCourses    Course[]         @relation("TaughtCourses")
+  liveCalls        LiveCall[]       @relation("UserLiveCalls")
+  conversationsA   Conversation[]   @relation("UserConversationsA")
+  conversationsB   Conversation[]   @relation("UserConversationsB")
+  messages         Message[]        @relation("UserMessages")
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+enum Role {
+  ALUNO
+  ADMIN
+}
+
+model Course {
+  id            Int         @id @default(autoincrement())
+  title         String
+  description   String
+  instructor    User        @relation("TaughtCourses", fields: [instructorId], references: [id])
+  instructorId  Int
+  students      User[]      @relation("UserCourses")
+  lessons       Lesson[]
+  liveCalls     LiveCall[]  @relation("CourseLiveCalls")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Conversation {
+  id             Int           @id @default(autoincrement())
+  participantA   User          @relation("UserConversationsA", fields: [participantAId], references: [id])
+  participantAId Int
+  participantB   User          @relation("UserConversationsB", fields: [participantBId], references: [id])
+  participantBId Int
+  messages       Message[]     @relation("ConversationMessages")
+  createdAt      DateTime      @default(now())
+}
+
+model Message {
+  id              Int           @id @default(autoincrement())
+  text            String
+  sender          User          @relation("UserMessages", fields: [senderId], references: [id])
+  senderId        Int
+  conversation    Conversation  @relation("ConversationMessages", fields: [conversationId], references: [id])
+  conversationId  Int
+  createdAt       DateTime      @default(now())
+}
+
+model Lesson {
+  id         Int       @id @default(autoincrement())
+  title      String
+  videoUrl   String
+  thumbnail  String
+  course     Course    @relation(fields: [courseId], references: [id])
+  courseId   Int
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model Chat {
+  id         Int       @id @default(autoincrement())
+  message    String
+  sender     User      @relation("SenderChats", fields: [senderId], references: [id])
+  senderId   Int
+  receiver   User      @relation("ReceiverChats", fields: [receiverId], references: [id])
+  receiverId Int
+  createdAt  DateTime  @default(now())
+}
+
+model LiveCall {
+  id           Int       @id @default(autoincrement())
+  scheduledAt  DateTime
+  link         String
+  course       Course    @relation("CourseLiveCalls", fields: [courseId], references: [id])
+  courseId     Int
+  participants User[]    @relation("UserLiveCalls")
+  createdAt    DateTime  @default(now())
+}
+
+model VerificationCode {
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
+  code        String   
+  expiresAt   DateTime 
+  createdAt   DateTime @default(now())
+}
