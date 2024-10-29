@@ -2,12 +2,11 @@
   "name": "andreiacouto",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "prisma generate && next build",
-    "start": "prisma db push && prisma db seed && next start",
-    "seed": "ts-node --transpile-only prisma/seed.ts",
-    "lint": "next lint"
+ "scripts": {
+    "dev": "node --import=tsx --watch --env-file=.env ./src/server.ts",
+    "build": "tsc && prisma generate",
+    "start": "npm run build && npx prisma migrate deploy && npx prisma db seed && node dist/server.js",
+    "seed": "node dist/prisma/seed.js"
   },
   "dependencies": {
     "@emotion/react": "^11.13.3",
