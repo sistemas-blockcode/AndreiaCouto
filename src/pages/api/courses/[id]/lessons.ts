@@ -26,17 +26,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: 'Campos obrigatórios estão faltando.' });
       }
 
+      // Verificação do formato do arquivo de vídeo (exemplo: apenas arquivos .mp4)
+      if (!videoFile.mimetype?.startsWith('video/')) {
+        return res.status(400).json({ error: 'Tipo de arquivo inválido. Apenas arquivos de vídeo são permitidos.' });
+      }
+
       // Caminho para salvar o arquivo de vídeo em `public/uploads`
       const uploadDir = path.join(process.cwd(), 'public', 'uploads');
       if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
+        await fs.promises.mkdir(uploadDir, { recursive: true });
       }
 
+      // Define o caminho completo para salvar o vídeo
       const videoFilePath = path.join(uploadDir, videoFile.newFilename);
-      fs.renameSync(videoFile.filepath, videoFilePath); // Move o arquivo para `public/uploads`
+
+      // Move o arquivo para `public/uploads` usando o método assíncrono
+      await fs.promises.rename(videoFile.filepath, videoFilePath);
 
       // Define o `videoUrl` que será salvo no banco de dados
       const videoUrl = `/uploads/${videoFile.newFilename}`;
+
+      // Validação do ID do curso antes de criar a aula
+      const courseId = parseInt(id as string);
+      const courseExists = await prisma.course.findUnique({
+        where: { id: courseId },
+      });
+      if (!courseExists) {
+        return res.status(404).json({ error: 'Curso não encontrado.' });
+      }
 
       // Criação da nova aula no banco de dados
       const newLesson = await prisma.lesson.create({
@@ -44,7 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           title,
           videoUrl, // URL do vídeo para exibição
           thumbnail,
-          courseId: parseInt(id as string),
+          courseId,
         },
       });
 
