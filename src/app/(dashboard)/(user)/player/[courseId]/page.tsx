@@ -50,7 +50,7 @@ export default function CourseDetails({ courseId }: CourseDetailsProps) {
       console.error('Erro ao carregar detalhes do curso:', error);
       toast({
         title: 'Erro ao carregar curso',
-        description: 'Tente novamente mais tarde',
+        description: 'Tente novamente mais tarde!',
         variant: 'destructive'
       });
     }
