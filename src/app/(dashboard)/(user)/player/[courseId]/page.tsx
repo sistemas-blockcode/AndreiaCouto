@@ -1,4 +1,3 @@
-// app/student/player/[courseId]/page.tsx
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -7,7 +6,6 @@ import { Check } from 'iconsax-react';
 interface Lesson {
   id: number;
   title: string;
-  videoUrl: string;
 }
 
 interface Course {
@@ -65,7 +63,7 @@ export default function CoursePlayer() {
           {/* Título e Vídeo */}
           <h2 className="text-xl font-bold mb-4">{course.title}</h2>
           <video
-            src={selectedLesson.videoUrl}
+            src={`/api/courses/${courseId}/lessons/${selectedLesson.id}/video`} // Carrega o vídeo do endpoint
             controls
             className="w-full h-[450px] rounded-md shadow-md mb-4 bg-gray-900"
             onTimeUpdate={(e) => setProgress((e.currentTarget.currentTime / e.currentTarget.duration) * 100)}

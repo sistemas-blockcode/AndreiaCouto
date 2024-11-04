@@ -50,7 +50,8 @@ model Course {
 model Lesson {
   id              Int               @id @default(autoincrement())
   title           String
-  videoUrl        String
+  videoUrl        String?           // Campo opcional, caso precise de uma URL de referência
+  videoData       Bytes?            // Armazena o vídeo como BLOB (binário)
   thumbnail       String
   course          Course            @relation(fields: [courseId], references: [id])
   courseId        Int
