@@ -1,105 +1,258 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Check } from 'iconsax-react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Edit2, Video, Trash, ArrowLeft2 } from 'iconsax-react';
+import { useToast } from '@/hooks/use-toast';
+import VideoPlayerModal from './VideoPlayerModal';
+import ConfirmDeleteModal from './confirmar-delete-modal';
+import EditCourseModal from './modal-editcourse';
 
 interface Lesson {
   id: number;
   title: string;
+  thumbnail: string;
 }
 
 interface Course {
   id: number;
   title: string;
+  description: string;
+  instructor: { name: string };
   lessons: Lesson[];
+  thumbnail: string;
 }
 
-export default function CoursePlayer() {
-  const params = useParams();
-  const router = useRouter();
-  const courseId = params?.courseId as string;
+interface CourseDetailsProps {
+  courseId: string;
+}
 
+export default function CourseDetails({ courseId }: CourseDetailsProps) {
   const [course, setCourse] = useState<Course | null>(null);
-  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
-  const [progress, setProgress] = useState(0);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [newLesson, setNewLesson] = useState<{ title: string; video: File | null; thumbnail: string }>({
+    title: '',
+    video: null,
+    thumbnail: ''
+  });
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [lessonToDelete, setLessonToDelete] = useState<number | null>(null);
+  const { toast } = useToast();
+  const router = useRouter();
 
-  useEffect(() => {
-    if (!courseId) {
-      router.push('/404');
+  const fetchCourseDetails = async () => {
+    try {
+      const response = await fetch(`/api/courses/${courseId}`);
+      if (!response.ok) throw new Error('Erro ao carregar detalhes do curso');
+      const data = await response.json();
+      setCourse(data);
+    } catch (error) {
+      console.error('Erro ao carregar detalhes do curso:', error);
+      toast({
+        title: 'Erro ao carregar curso',
+        description: 'Tente novamente mais tarde',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleAddLesson = async () => {
+    if (!newLesson.title || !newLesson.video) {
+      toast({
+        title: 'Campos obrigatórios',
+        description: 'Por favor, preencha o título e selecione o vídeo.',
+        variant: 'destructive'
+      });
       return;
     }
 
-    const fetchCourseData = async () => {
-      const response = await fetch(`/api/courses/${courseId}`);
-      const data = await response.json();
-      setCourse(data);
+    const formData = new FormData();
+    formData.append('title', newLesson.title);
+    formData.append('video', newLesson.video);
+    formData.append('thumbnail', newLesson.thumbnail);
 
-      if (data.lessons && data.lessons.length > 0) {
-        setSelectedLesson(data.lessons[0]);
+    try {
+      const response = await fetch(`/api/courses/${courseId}/lessons`, {
+        method: 'POST',
+        body: formData
+      });
+      if (!response.ok) throw new Error('Erro ao adicionar aula');
+      toast({
+        title: 'Aula adicionada',
+        description: 'A aula foi adicionada com sucesso.',
+        variant: 'success'
+      });
+      fetchCourseDetails();
+      setNewLesson({ title: '', video: null, thumbnail: '' });
+    } catch (error) {
+      console.error('Erro ao adicionar aula:', error);
+      toast({
+        title: 'Erro ao adicionar aula',
+        description: 'Tente novamente mais tarde',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleDeleteLesson = async () => {
+    if (lessonToDelete === null) return;
+
+    try {
+      const response = await fetch(`/api/courses/${courseId}/deleteLesson?lessonId=${lessonToDelete}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Lição deletada',
+          description: 'A videoaula foi deletada com sucesso.',
+          variant: 'success',
+        });
+        fetchCourseDetails();
+        setLessonToDelete(null);
+        setIsModalOpen(false);
+      } else {
+        toast({
+          title: 'Erro ao deletar',
+          description: 'Houve um problema ao tentar deletar a lição.',
+          variant: 'destructive',
+        });
       }
-    };
+    } catch (error) {
+      console.error('Erro ao deletar lição:', error);
+      toast({
+        title: 'Erro no servidor',
+        description: 'Erro ao deletar a lição, tente novamente mais tarde.',
+        variant: 'destructive',
+      });
+    }
+  };
 
-    fetchCourseData();
-  }, [courseId, router]);
+  useEffect(() => {
+    fetchCourseDetails();
+  }, [courseId]);
 
-  const handleLessonSelect = (lesson: Lesson) => setSelectedLesson(lesson);
-
-  if (!course || !selectedLesson) return <div>Carregando...</div>;
+  if (!course) return <p>Carregando...</p>;
 
   return (
-    <div className="flex h-screen bg-gray-50 ml-5">
-
-      {/* Barra de Progresso */}
-      <div className="absolute top-0 left-0 w-full h-2 bg-gray-300">
-        <div
-          className="h-full bg-verde transition-all duration-200"
-          style={{ width: `${progress}%` }}
-        ></div>
+    <div className="bg-white shadow-md rounded-lg p-6 w-full overflow-y-auto">
+      {/* Botão de voltar */}
+      <div className="flex justify-between items-center mb-6">
+        <button
+          onClick={() => router.push('/admin/cursos')}
+          className="flex items-center text-gray-600 hover:text-gray-800 transition"
+        >
+          <ArrowLeft2 size="24" />
+        </button>
+        <h2 className="text-2xl font-semibold text-gray-800">{course.title}</h2>
+        <button
+          onClick={() => setIsEditModalOpen(true)} // Abre o modal de edição
+          className="flex items-center gap-2 bg-verde text-sm text-white px-4 py-2 rounded-lg hover:bg-verdeAgua transition"
+        >
+          <Edit2 size="18" />
+          Editar Curso
+        </button>
       </div>
-
-      {/* Container do Player e Sidebar */}
-      <div className="flex-1 p-6 relative flex rounded ml-2">
-        <div className="flex-1 pr-6">
-          {/* Título e Vídeo */}
-          <h2 className="text-xl font-bold mb-4">{course.title}</h2>
-          <video
-            src={`/api/courses/${courseId}/lessons/${selectedLesson.id}/video`} // Carrega o vídeo do endpoint
-            controls
-            className="w-full h-[450px] rounded-md shadow-md mb-4 bg-gray-900"
-            onTimeUpdate={(e) => setProgress((e.currentTarget.currentTime / e.currentTarget.duration) * 100)}
-          >
-            Seu navegador não suporta o elemento de vídeo.
-          </video>
+      <div className='flex gap-2 mb-4 items-center'>
+        <h2 className='font-semibold text-lg'>Descrição:</h2>
+        <p className="text-md">{course.description}</p>
+      </div>
+      <div className="mb-8">
+        <h3 className="text-lg font-semibold text-gray-700">Videoaulas</h3>
+        <div className="hidden sm:grid grid-cols-4 gap-4 py-2 px-4 bg-[#F3F4F6] rounded-t-lg mt-4">
+          <span className="text-sm font-semibold text-gray-600">Nº</span>
+          <span className="text-sm font-semibold text-gray-600">Título</span>
+          <span className="text-sm font-semibold text-gray-600">Thumbnail</span>
+          <span className="text-sm font-semibold text-center text-gray-600">Ação</span>
         </div>
 
-        {/* Sidebar */}
-        <div className="w-1/4 bg-gray-100 p-4 rounded-md shadow-md h-full border">
+        {course.lessons.map((lesson, index) => (
+          <div key={lesson.id} className="grid grid-cols-1 sm:grid-cols-4 gap-4 py-4 px-4 items-center border-b">
+            <div className="text-gray-700 font-medium">{index + 1}</div>
+            <div className="text-gray-700 font-medium">{lesson.title}</div>
+            <div>
+              <img src={lesson.thumbnail} alt={`Thumbnail de ${lesson.title}`} className="w-24 h-16 rounded" />
+            </div>
+            <div className="flex justify-center gap-3">
+              <button
+                onClick={() => setSelectedVideoUrl(`/api/courses/${courseId}/lessons/${lesson.id}/video`)}
+                className="text-blue-500 hover:bg-blue-100 p-2 rounded-full flex items-center gap-1"
+              >
+                <Video size="18" />
+              </button>
+              <button
+                onClick={() => {
+                  setLessonToDelete(lesson.id);
+                  setIsModalOpen(true);
+                }}
+                className="text-red-500 hover:bg-red-100 p-2 rounded-full"
+              >
+                <Trash size="18" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-700">Adicionar nova videoaula</h3>
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-4 gap-4 items-center">
           <input
             type="text"
-            placeholder="Busca"
-            className="w-full p-2 mb-4 bg-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-verde"
+            placeholder="Título da aula"
+            value={newLesson.title}
+            onChange={(e) => setNewLesson({ ...newLesson, title: e.target.value })}
+            className="border p-2 rounded col-span-1 sm:col-span-2"
           />
-          <h4 className="text-gray-700 mb-3 text-base font-medium">Conteúdo do curso</h4>
-          {course.lessons.map((lesson, index) => (
-            <div
-              key={lesson.id}
-              onClick={() => handleLessonSelect(lesson)}
-              className={`p-2 mb-3 cursor-pointer flex items-center rounded-md transition-colors ${
-                selectedLesson.id === lesson.id ? 'bg-verde text-white' : 'bg-gray-100 text-gray-800'
-              } hover:bg-gray-300`}
-            >
-              <span className="mr-2 font-semibold">{`#${index + 1}`}</span>
-              <span className="text-sm flex-1">{lesson.title}</span>
-              <Check
-                size="18"
-                className={`ml-2 ${
-                  selectedLesson.id === lesson.id ? 'text-white' : 'text-gray-500'
-                }`}
-              />
-            </div>
-          ))}
+          <input
+            type="file"
+            accept="video/mp4"
+            onChange={(e) => setNewLesson({ ...newLesson, video: e.target.files ? e.target.files[0] : null })}
+            className="border p-2 rounded"
+          />
+          <input
+            type="text"
+            placeholder="URL da thumbnail"
+            value={newLesson.thumbnail}
+            onChange={(e) => setNewLesson({ ...newLesson, thumbnail: e.target.value })}
+            className="border p-2 rounded"
+          />
+          <button
+            onClick={handleAddLesson}
+            className="px-1 py-2 font-semibold text-xs text-white bg-rosaVibrante rounded-lg w-auto"
+          >
+            Adicionar Aula
+          </button>
         </div>
       </div>
+
+      {/* Modal de Vídeo */}
+      {selectedVideoUrl && (
+        <VideoPlayerModal
+          videoUrl={selectedVideoUrl}
+          isOpen={Boolean(selectedVideoUrl)}
+          onClose={() => setSelectedVideoUrl(null)}
+        />
+      )}
+
+      {/* Modal de Confirmação de Deleção */}
+      <ConfirmDeleteModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleDeleteLesson}
+        entityName="videoaula"
+      />
+
+      {/* Modal de Edição do Curso */}
+      {isEditModalOpen && course && (
+        <EditCourseModal
+          courseId={course.id}
+          initialTitle={course.title}
+          initialThumbnail={course.thumbnail}
+          onClose={() => setIsEditModalOpen(false)}
+          onUpdate={fetchCourseDetails} // Atualiza os detalhes do curso após edição
+        />
+      )}
     </div>
   );
 }
