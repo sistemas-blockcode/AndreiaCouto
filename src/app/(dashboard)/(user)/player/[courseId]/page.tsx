@@ -3,9 +3,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Edit2, Video, Trash, ArrowLeft2 } from 'iconsax-react';
 import { useToast } from '@/hooks/use-toast';
-import VideoPlayerModal from './VideoPlayerModal';
-import ConfirmDeleteModal from './confirmar-delete-modal';
-import EditCourseModal from './modal-editcourse';
+import VideoPlayerModal from '@/app/components/ui/VideoPlayerModal';
+import ConfirmDeleteModal from '@/app/components/ui/confirmar-delete-modal';
+import EditCourseModal from '@/app/components/ui/modal-editcourse';
 
 interface Lesson {
   id: number;
