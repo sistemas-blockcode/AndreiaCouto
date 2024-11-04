@@ -1,3 +1,4 @@
+// app/student/StudentCards.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -7,38 +8,46 @@ import { useAuth } from '@/app/components/context/AuthContext';
 export default function StudentCards() {
   const { userId, loading } = useAuth(); 
   const [coursesCount, setCoursesCount] = useState(0);
+  const [watchTime, setWatchTime] = useState(0);
 
   useEffect(() => {
     const fetchCoursesCount = async () => {
-      if (!userId) {
-        console.log("Nenhum userId encontrado, abortando busca de cursos");
-        return;
-      }
+      if (!userId) return;
       
       try {
-        console.log(`Buscando contagem de cursos para userId: ${userId}`);
         const response = await fetch(`/api/students/getStudentCoursesCount?studentId=${userId}`);
         const data = await response.json();
-        
-        console.log("Resposta da API /getStudentCoursesCount:", data);
-        if (response.ok) {
-          setCoursesCount(data.coursesCount || 0);
-        } else {
-          console.log("Erro na resposta da API:", data.message);
-          setCoursesCount(0);
-        }
+        setCoursesCount(data.coursesCount || 0);
       } catch (error) {
-        console.error('Erro ao buscar contagem de cursos:', error);
+        console.error('Error fetching course count:', error);
         setCoursesCount(0);
+      }
+    };
+
+    const fetchWatchTime = async () => {
+      if (!userId) return;
+
+      try {
+        const response = await fetch(`/api/students/getStudentWatchTime?studentId=${userId}`);
+        const data = await response.json();
+        setWatchTime(data.totalWatchTime || 0); // Total em segundos
+      } catch (error) {
+        console.error('Error fetching watch time:', error);
+        setWatchTime(0);
       }
     };
 
     if (!loading) {
       fetchCoursesCount();
+      fetchWatchTime();
     }
   }, [userId, loading]);
 
-  console.log("Estado final de coursesCount:", coursesCount);
+  const formatWatchTime = (timeInSeconds: number) => {
+    const hours = Math.floor(timeInSeconds / 3600);
+    const minutes = Math.floor((timeInSeconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  };
 
   if (loading) return <div>Carregando...</div>;
 
@@ -66,8 +75,8 @@ export default function StudentCards() {
           <div className="p-3 rounded-full bg-[#fff7ed] mb-3 hover:shadow-[0_0_10px_#EA580C] transition-shadow duration-300">
             <Clock size="32" color="#EA580C" />
           </div>
-          <span className="text-lg font-semibold text-gray-800">Horas Assistidas</span>
-          <span className="text-xl font-regular text-gray-600 mt-1">24h</span>
+          <span className="text-lg font-semibold text-gray-800">Tempo Assistido</span>
+          <span className="text-xl font-regular text-gray-600 mt-1">{formatWatchTime(watchTime)}</span>
         </div>
       </div>
     </div>

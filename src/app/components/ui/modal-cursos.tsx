@@ -35,17 +35,17 @@ export default function ModalCursos({ onClose }: { onClose: () => void }) {
   };
 
   const handleCreateCourse = async () => {
-    if (!courseName || !courseDescription || !selectedInstructor || !thumbnail) {
+    if (!courseName || !courseDescription || !selectedInstructor) {
       toast({
         title: 'Campos obrigatórios',
-        description: 'Por favor, preencha todos os campos.',
+        description: 'Por favor, preencha todos os campos obrigatórios.',
         variant: 'destructive',
       });
       return;
     }
-
+  
     setLoading(true);
-
+  
     try {
       const response = await fetch('/api/courses/createCourses', {
         method: 'POST',
@@ -56,12 +56,12 @@ export default function ModalCursos({ onClose }: { onClose: () => void }) {
           title: courseName,
           description: courseDescription,
           instructorId: selectedInstructor,
-          thumbnail,
+          thumbnail, // O thumbnail será enviado como null ou uma string caso seja selecionado
         }),
       });
-
+  
       const data = await response.json();
-
+  
       if (response.ok) {
         toast({
           title: 'Sucesso!',
@@ -86,7 +86,7 @@ export default function ModalCursos({ onClose }: { onClose: () => void }) {
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   useEffect(() => {
     const fetchAdministrators = async () => {

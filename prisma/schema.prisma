@@ -7,11 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-generator tsnode {
-  provider = "ts-node"
-  output   = "./node_modules/.bin"
-}
-
 model User {
   id               Int              @id @default(autoincrement())
   name             String
@@ -28,6 +23,7 @@ model User {
   conversationsA   Conversation[]   @relation("UserConversationsA")
   conversationsB   Conversation[]   @relation("UserConversationsB")
   messages         Message[]        @relation("UserMessages")
+  lessonProgresses LessonProgress[] @relation("UserLessonProgresses")
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 }
@@ -41,6 +37,7 @@ model Course {
   id            Int         @id @default(autoincrement())
   title         String
   description   String
+  thumbnail     String?
   instructor    User        @relation("TaughtCourses", fields: [instructorId], references: [id])
   instructorId  Int
   students      User[]      @relation("UserCourses")
@@ -48,6 +45,29 @@ model Course {
   liveCalls     LiveCall[]  @relation("CourseLiveCalls")
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+}
+
+model Lesson {
+  id              Int               @id @default(autoincrement())
+  title           String
+  videoUrl        String
+  thumbnail       String
+  course          Course            @relation(fields: [courseId], references: [id])
+  courseId        Int
+  lessonProgresses LessonProgress[] @relation("LessonLessonProgresses")
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+}
+
+model LessonProgress {
+  id         Int       @id @default(autoincrement())
+  student    User      @relation("UserLessonProgresses", fields: [studentId], references: [id])
+  studentId  Int
+  lesson     Lesson    @relation("LessonLessonProgresses", fields: [lessonId], references: [id])
+  lessonId   Int
+  timeWatched Int      // Tempo assistido em segundos
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }
 
 model Conversation {
@@ -68,17 +88,6 @@ model Message {
   conversation    Conversation  @relation("ConversationMessages", fields: [conversationId], references: [id])
   conversationId  Int
   createdAt       DateTime      @default(now())
-}
-
-model Lesson {
-  id         Int       @id @default(autoincrement())
-  title      String
-  videoUrl   String
-  thumbnail  String
-  course     Course    @relation(fields: [courseId], references: [id])
-  courseId   Int
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
 }
 
 model Chat {

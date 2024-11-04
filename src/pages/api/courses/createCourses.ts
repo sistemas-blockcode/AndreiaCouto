@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import {prisma} from '@/lib/prisma'; // Importa o cliente Prisma
+import { prisma } from '@/lib/prisma';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -8,21 +8,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { title, description, instructorId, thumbnail } = req.body;
 
-
-  if (!title || !description || !instructorId || !thumbnail) {
-    return res.status(400).json({ message: 'Todos os campos são obrigatórios!' });
+  // Verifica apenas os campos obrigatórios
+  if (!title || !description || !instructorId) {
+    return res.status(400).json({ message: 'Os campos título, descrição e instrutor são obrigatórios!' });
   }
 
   try {
-    
     const course = await prisma.course.create({
       data: {
         title,
         description,
-        instructorId: parseInt(instructorId), 
-        lessons: {
-          create: [], 
-        },
+        instructorId: parseInt(instructorId),
+        thumbnail: thumbnail || null, // Salva `thumbnail` como `null` caso não seja enviado
       },
     });
 

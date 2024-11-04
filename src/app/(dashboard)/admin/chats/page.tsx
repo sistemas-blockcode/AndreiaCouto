@@ -20,8 +20,6 @@ export default function Page() {
 
   return (
     <div className="flex h-screen">
-      <Sidebar />
-
       <CoursesProvider>
         <div className="flex flex-1">
           {/* Exibir apenas Sidechat em telas grandes ou quando a conversa não estiver aberta no modo mobile */}

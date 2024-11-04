@@ -1,4 +1,7 @@
+// tabela-cursos.tsx
 'use client';
+
+import { useRouter } from 'next/navigation';
 import { Book, Edit2, Trash, Refresh } from 'iconsax-react';
 import ConfirmDeleteModal from './confirmar-delete-modal';
 import { useCourses } from '@/app/components/context/CourseContext';
@@ -6,6 +9,7 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function TabelaCursos() {
+  const router = useRouter();
   const { filteredCourses, fetchCourses } = useCourses();
   const [courseToDelete, setCourseToDelete] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -27,7 +31,7 @@ export default function TabelaCursos() {
         });
         setCourseToDelete(null);
         setIsModalOpen(false);
-        fetchCourses(); // Atualiza os cursos após deletar
+        fetchCourses();
       } else {
         toast({
           title: 'Erro ao deletar',
@@ -49,7 +53,6 @@ export default function TabelaCursos() {
     <div className="bg-white shadow-md rounded-lg p-6 w-full overflow-y-auto">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold">Cursos</h2>
-        {/* Botão de recarregar */}
         <button
           className="flex items-center gap-2 bg-rosaVibrante text-white px-2 py-2 rounded-lg hover:bg-rosaClaro transition"
           onClick={fetchCourses}
@@ -93,7 +96,10 @@ export default function TabelaCursos() {
           </div>
 
           <div className="flex justify-center gap-3">
-            <button className="text-blue-500 hover:bg-blue-100 p-2 rounded-full">
+            <button 
+              onClick={() => router.push(`/admin/cursos/${course.id}`)}
+              className="text-blue-500 hover:bg-blue-100 p-2 rounded-full"
+            >
               <Edit2 size="24" />
             </button>
             <button

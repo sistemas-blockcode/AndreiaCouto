@@ -9,8 +9,6 @@ import { StudentsProvider } from '@/app/components/context/StudentsContext';
 export default function Page() {
   return (
     <div className="flex">
-      <Sidebar />
-
       <StudentsProvider>
       <main className="flex-1 p-6 bg-gray-50">
         <div className="mb-6">
