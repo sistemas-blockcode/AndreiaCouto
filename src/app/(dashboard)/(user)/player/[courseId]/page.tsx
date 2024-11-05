@@ -50,7 +50,6 @@ export default function CoursePlayer() {
 
   return (
     <div className="flex h-screen bg-gray-50 ml-5">
-      {/* Barra de Progresso */}
       <div className="absolute top-0 left-0 w-full h-2 bg-gray-300">
         <div
           className="h-full bg-verde transition-all duration-200"
@@ -58,10 +57,8 @@ export default function CoursePlayer() {
         ></div>
       </div>
 
-      {/* Container do Player e Sidebar */}
       <div className="flex-1 p-6 relative flex rounded ml-2">
         <div className="flex-1 pr-6">
-          {/* Título e Vídeo */}
           <h2 className="text-xl font-bold mb-4">{course.title}</h2>
           <video
             src={selectedLesson.videoUrl}
@@ -73,7 +70,6 @@ export default function CoursePlayer() {
           </video>
         </div>
 
-        {/* Sidebar */}
         <div className="w-1/4 bg-gray-100 p-4 rounded-md shadow-md h-full border">
           <input
             type="text"

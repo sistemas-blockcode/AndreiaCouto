@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Edit2, Video, Trash, ArrowLeft2 } from 'iconsax-react';
 import { useToast } from '@/hooks/use-toast';
@@ -35,11 +35,13 @@ export default function CourseDetails({ courseId }: CourseDetailsProps) {
     video: null,
     thumbnail: ''
   });
+  const [isAddingLesson, setIsAddingLesson] = useState(false);
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [lessonToDelete, setLessonToDelete] = useState<number | null>(null);
   const { toast } = useToast();
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null); // Referência para o input de arquivo
 
   const fetchCourseDetails = async () => {
     try {
@@ -67,6 +69,7 @@ export default function CourseDetails({ courseId }: CourseDetailsProps) {
       return;
     }
 
+    setIsAddingLesson(true); // Bloqueia o botão
     const formData = new FormData();
     formData.append('title', newLesson.title);
     formData.append('video', newLesson.video);
@@ -85,6 +88,11 @@ export default function CourseDetails({ courseId }: CourseDetailsProps) {
       });
       fetchCourseDetails();
       setNewLesson({ title: '', video: null, thumbnail: '' });
+
+      // Zera o campo de seleção de arquivo
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     } catch (error) {
       console.error('Erro ao adicionar aula:', error);
       toast({
@@ -92,6 +100,8 @@ export default function CourseDetails({ courseId }: CourseDetailsProps) {
         description: 'Tente novamente mais tarde',
         variant: 'destructive'
       });
+    } finally {
+      setIsAddingLesson(false); // Desbloqueia o botão
     }
   };
 
@@ -155,8 +165,8 @@ export default function CourseDetails({ courseId }: CourseDetailsProps) {
         </button>
       </div>
       <div className='flex gap-2 mb-4 items-center'>
-      <h2 className='font-semibold text-lg'>Descrição:</h2>
-      <p className="text-md">{course.description}</p>
+        <h2 className='font-semibold text-lg'>Descrição:</h2>
+        <p className="text-md">{course.description}</p>
       </div>
       <div className="mb-8">
         <h3 className="text-lg font-semibold text-gray-700">Videoaulas</h3>
@@ -208,6 +218,7 @@ export default function CourseDetails({ courseId }: CourseDetailsProps) {
           <input
             type="file"
             accept="video/mp4"
+            ref={fileInputRef} // Adiciona referência ao campo de arquivo
             onChange={(e) => setNewLesson({ ...newLesson, video: e.target.files ? e.target.files[0] : null })}
             className="border p-2 rounded"
           />
@@ -220,9 +231,10 @@ export default function CourseDetails({ courseId }: CourseDetailsProps) {
           />
           <button
             onClick={handleAddLesson}
-            className="px-1 py-2 font-semibold text-xs text-white bg-rosaVibrante rounded-lg w-auto"
+            disabled={isAddingLesson} // Desabilita o botão enquanto estiver carregando
+            className={`px-1 py-2 font-semibold text-xs text-white bg-rosaVibrante rounded-lg w-auto ${isAddingLesson ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            Adicionar Aula
+            {isAddingLesson ? 'Adicionando...' : 'Adicionar Aula'}
           </button>
         </div>
       </div>

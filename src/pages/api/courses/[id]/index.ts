@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import {prisma} from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
@@ -9,14 +9,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const course = await prisma.course.findUnique({
         where: { id: parseInt(id as string) },
         include: {
-          instructor: {
-            select: { name: true },
-          },
+          instructor: { select: { name: true } },
           lessons: {
             select: {
               id: true,
               title: true,
-              videoUrl: true,
               thumbnail: true,
             },
           },
@@ -27,7 +24,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(404).json({ error: 'Curso não encontrado' });
       }
 
-      res.status(200).json(course);
+      // Construa a URL do vídeo para cada aula
+      const lessonsWithUrls = course.lessons.map((lesson) => ({
+        ...lesson,
+        videoUrl: `/api/courses/${course.id}/lessons/${lesson.id}/video`,
+      }));
+
+      res.status(200).json({ ...course, lessons: lessonsWithUrls });
     } catch (error) {
       console.error('Erro ao carregar detalhes do curso:', error);
       res.status(500).json({ error: 'Erro ao carregar detalhes do curso' });
