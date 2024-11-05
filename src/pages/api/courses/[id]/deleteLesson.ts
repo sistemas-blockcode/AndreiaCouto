@@ -1,3 +1,4 @@
+// pages/api/courses/[id]/deleteLesson.ts
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 
@@ -10,11 +11,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
-      // Deletar a lição pelo ID
       await prisma.lesson.delete({
         where: { id: parseInt(lessonId as string, 10) },
       });
 
+      console.log(`Lição com ID ${lessonId} deletada com sucesso.`);
       res.status(200).json({ message: 'Lição deletada com sucesso.' });
     } catch (error) {
       console.error('Erro ao deletar lição:', error);

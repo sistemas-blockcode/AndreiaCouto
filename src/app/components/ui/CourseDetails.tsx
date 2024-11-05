@@ -36,12 +36,13 @@ export default function CourseDetails({ courseId }: CourseDetailsProps) {
     thumbnail: ''
   });
   const [isAddingLesson, setIsAddingLesson] = useState(false);
+  const [isDeletingLesson, setIsDeletingLesson] = useState(false); // Estado para bloqueio do botão de exclusão
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [lessonToDelete, setLessonToDelete] = useState<number | null>(null);
   const { toast } = useToast();
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null); // Referência para o input de arquivo
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchCourseDetails = async () => {
     try {
@@ -69,7 +70,7 @@ export default function CourseDetails({ courseId }: CourseDetailsProps) {
       return;
     }
 
-    setIsAddingLesson(true); // Bloqueia o botão
+    setIsAddingLesson(true);
     const formData = new FormData();
     formData.append('title', newLesson.title);
     formData.append('video', newLesson.video);
@@ -89,7 +90,6 @@ export default function CourseDetails({ courseId }: CourseDetailsProps) {
       fetchCourseDetails();
       setNewLesson({ title: '', video: null, thumbnail: '' });
 
-      // Zera o campo de seleção de arquivo
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -101,13 +101,14 @@ export default function CourseDetails({ courseId }: CourseDetailsProps) {
         variant: 'destructive'
       });
     } finally {
-      setIsAddingLesson(false); // Desbloqueia o botão
+      setIsAddingLesson(false);
     }
   };
 
   const handleDeleteLesson = async () => {
     if (lessonToDelete === null) return;
 
+    setIsDeletingLesson(true); // Ativa o bloqueio de exclusão
     try {
       const response = await fetch(`/api/courses/${courseId}/deleteLesson?lessonId=${lessonToDelete}`, {
         method: 'DELETE',
@@ -136,6 +137,8 @@ export default function CourseDetails({ courseId }: CourseDetailsProps) {
         description: 'Erro ao deletar a lição, tente novamente mais tarde.',
         variant: 'destructive',
       });
+    } finally {
+      setIsDeletingLesson(false); // Libera o botão de exclusão
     }
   };
 
@@ -157,7 +160,7 @@ export default function CourseDetails({ courseId }: CourseDetailsProps) {
         </button>
         <h2 className="text-2xl font-semibold text-gray-800">{course.title}</h2>
         <button
-          onClick={() => setIsEditModalOpen(true)} // Abre o modal de edição
+          onClick={() => setIsEditModalOpen(true)}
           className="flex items-center gap-2 bg-verde text-sm text-white px-4 py-2 rounded-lg hover:bg-verdeAgua transition"
         >
           <Edit2 size="18" />
@@ -196,7 +199,8 @@ export default function CourseDetails({ courseId }: CourseDetailsProps) {
                   setLessonToDelete(lesson.id);
                   setIsModalOpen(true);
                 }}
-                className="text-red-500 hover:bg-red-100 p-2 rounded-full"
+                className={`text-red-500 hover:bg-red-100 p-2 rounded-full ${isDeletingLesson ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={isDeletingLesson}
               >
                 <Trash size="18" />
               </button>
@@ -218,7 +222,7 @@ export default function CourseDetails({ courseId }: CourseDetailsProps) {
           <input
             type="file"
             accept="video/mp4"
-            ref={fileInputRef} // Adiciona referência ao campo de arquivo
+            ref={fileInputRef}
             onChange={(e) => setNewLesson({ ...newLesson, video: e.target.files ? e.target.files[0] : null })}
             className="border p-2 rounded"
           />
@@ -231,7 +235,7 @@ export default function CourseDetails({ courseId }: CourseDetailsProps) {
           />
           <button
             onClick={handleAddLesson}
-            disabled={isAddingLesson} // Desabilita o botão enquanto estiver carregando
+            disabled={isAddingLesson}
             className={`px-1 py-2 font-semibold text-xs text-white bg-rosaVibrante rounded-lg w-auto ${isAddingLesson ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {isAddingLesson ? 'Adicionando...' : 'Adicionar Aula'}
@@ -263,7 +267,7 @@ export default function CourseDetails({ courseId }: CourseDetailsProps) {
           initialTitle={course.title}
           initialThumbnail={course.thumbnail}
           onClose={() => setIsEditModalOpen(false)}
-          onUpdate={fetchCourseDetails} // Atualiza os detalhes do curso após edição
+          onUpdate={fetchCourseDetails}
         />
       )}
     </div>

@@ -1,3 +1,4 @@
+// pages/api/students/deleteStudents.ts
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 
@@ -10,8 +11,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
+      const id = Number(studentId);
+
+      // Exclui referências manuais antes de excluir o usuário
+      await prisma.conversation.deleteMany({
+        where: { OR: [{ participantAId: id }, { participantBId: id }] },
+      });
+      await prisma.chat.deleteMany({
+        where: { OR: [{ senderId: id }, { receiverId: id }] },
+      });
+      await prisma.message.deleteMany({
+        where: { senderId: id },
+      });
+      await prisma.lessonProgress.deleteMany({
+        where: { studentId: id },
+      });
+
+      // Agora pode excluir o usuário
       const student = await prisma.user.delete({
-        where: { id: Number(studentId) },
+        where: { id },
       });
 
       res.status(200).json({ message: 'Aluno deletado com sucesso!', student });

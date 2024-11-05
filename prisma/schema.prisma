@@ -38,7 +38,7 @@ model Course {
   title         String
   description   String
   thumbnail     String?
-  instructor    User        @relation("TaughtCourses", fields: [instructorId], references: [id])
+  instructor    User        @relation("TaughtCourses", fields: [instructorId], references: [id], onDelete: Cascade)
   instructorId  Int
   students      User[]      @relation("UserCourses")
   lessons       Lesson[]
@@ -50,10 +50,10 @@ model Course {
 model Lesson {
   id              Int               @id @default(autoincrement())
   title           String
-  videoUrl        String?           // Campo opcional, caso precise de uma URL de referência
-  videoData       Bytes?            // Armazena o vídeo como BLOB (binário)
+  videoUrl        String?          
+  videoData       Bytes?           
   thumbnail       String
-  course          Course            @relation(fields: [courseId], references: [id])
+  course          Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
   courseId        Int
   lessonProgresses LessonProgress[] @relation("LessonLessonProgresses")
   createdAt       DateTime          @default(now())
@@ -62,20 +62,22 @@ model Lesson {
 
 model LessonProgress {
   id         Int       @id @default(autoincrement())
-  student    User      @relation("UserLessonProgresses", fields: [studentId], references: [id])
+
+  
+  student    User      @relation("UserLessonProgresses", fields: [studentId], references: [id], onDelete: Cascade)
   studentId  Int
-  lesson     Lesson    @relation("LessonLessonProgresses", fields: [lessonId], references: [id])
+  lesson     Lesson    @relation("LessonLessonProgresses", fields: [lessonId], references: [id], onDelete: Cascade)
   lessonId   Int
-  timeWatched Int      // Tempo assistido em segundos
+  timeWatched Int      
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 }
 
 model Conversation {
   id             Int           @id @default(autoincrement())
-  participantA   User          @relation("UserConversationsA", fields: [participantAId], references: [id])
+  participantA   User          @relation("UserConversationsA", fields: [participantAId], references: [id], onDelete: Cascade)
   participantAId Int
-  participantB   User          @relation("UserConversationsB", fields: [participantBId], references: [id])
+  participantB   User          @relation("UserConversationsB", fields: [participantBId], references: [id], onDelete: Cascade)
   participantBId Int
   messages       Message[]     @relation("ConversationMessages")
   createdAt      DateTime      @default(now())
@@ -84,9 +86,9 @@ model Conversation {
 model Message {
   id              Int           @id @default(autoincrement())
   text            String
-  sender          User          @relation("UserMessages", fields: [senderId], references: [id])
+  sender          User          @relation("UserMessages", fields: [senderId], references: [id], onDelete: Cascade)
   senderId        Int
-  conversation    Conversation  @relation("ConversationMessages", fields: [conversationId], references: [id])
+  conversation    Conversation  @relation("ConversationMessages", fields: [conversationId], references: [id], onDelete: Cascade)
   conversationId  Int
   createdAt       DateTime      @default(now())
 }
@@ -94,9 +96,9 @@ model Message {
 model Chat {
   id         Int       @id @default(autoincrement())
   message    String
-  sender     User      @relation("SenderChats", fields: [senderId], references: [id])
+  sender     User      @relation("SenderChats", fields: [senderId], references: [id], onDelete: Cascade)
   senderId   Int
-  receiver   User      @relation("ReceiverChats", fields: [receiverId], references: [id])
+  receiver   User      @relation("ReceiverChats", fields: [receiverId], references: [id], onDelete: Cascade)
   receiverId Int
   createdAt  DateTime  @default(now())
 }
@@ -105,7 +107,7 @@ model LiveCall {
   id           Int       @id @default(autoincrement())
   scheduledAt  DateTime
   link         String
-  course       Course    @relation("CourseLiveCalls", fields: [courseId], references: [id])
+  course       Course    @relation("CourseLiveCalls", fields: [courseId], references: [id], onDelete: Cascade)
   courseId     Int
   participants User[]    @relation("UserLiveCalls")
   createdAt    DateTime  @default(now())
