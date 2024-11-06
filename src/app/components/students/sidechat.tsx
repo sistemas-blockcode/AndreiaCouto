@@ -1,3 +1,4 @@
+// components/students/SidechatStudent.tsx
 import { useEffect, useState } from 'react';
 import { Add } from 'iconsax-react';
 import ModalNovaConversa from './modal-novaconversa';
@@ -10,7 +11,7 @@ interface Conversation {
   unread: number;
 }
 
-export default function Sidechat({ onSelectConversation }: { onSelectConversation: (id: number) => void }) {
+export default function SidechatStudent({ onSelectConversation }: { onSelectConversation: (id: number) => void }) {
   const { userId: loggedInUserId, loading } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -43,16 +44,11 @@ export default function Sidechat({ onSelectConversation }: { onSelectConversatio
     onSelectConversation(id);
   };
 
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
-  };
-
+  const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    fetchConversations(); // Atualiza as conversas ao fechar o modal após iniciar uma nova conversa
+    fetchConversations(); // Atualiza as conversas ao fechar o modal
   };
-
-  if (loading) return <p>Carregando conversas...</p>;
 
   return (
     <div className="w-full sm:w-80 bg-white shadow-lg h-full p-6 border-r border-gray-200">

@@ -1,3 +1,4 @@
+// pages/api/conversations/sendMessage.ts
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 
@@ -19,9 +20,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         senderId,
         conversationId,
       },
+      include: {
+        sender: true,
+      },
     });
 
-    res.status(201).json(message);
+    res.status(201).json({
+      id: message.id,
+      sender: message.sender.name,
+      text: message.text,
+      createdAt: message.createdAt.toISOString(),
+    });
   } catch (error) {
     console.error('Erro ao enviar mensagem:', error);
     res.status(500).json({ message: 'Erro ao enviar mensagem.' });

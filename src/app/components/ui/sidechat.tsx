@@ -1,31 +1,42 @@
-// components/ui/sidechat.tsx
-'use client';
 import { useState } from 'react';
 import { Add } from 'iconsax-react';
 import ModalNovaConversa from './modal-novaconversa';
 
-const conversations = [
-  { id: 1, name: 'João Silva', preview: 'Maria: Olá, tudo bem?', unread: 0 },
-  { id: 2, name: 'Maria Oliveira', preview: 'Inicie a conversa!', unread: 0 },
-  { id: 3, name: 'Grupo Teste', preview: 'Pedro: Olá, pessoal!', unread: 5 },
-];
+interface User {
+  id: number;
+  name: string;
+  avatarUrl?: string | null;
+}
 
-export default function Sidechat({ onSelectConversation }: { onSelectConversation: (id: number) => void }) {
+interface Message {
+  text: string;
+}
+
+interface Conversation {
+  id: number;
+  participantA: User;
+  participantB: User;
+  messages: Message[];
+}
+
+interface SidechatProps {
+  conversations: Conversation[];
+  onSelectConversation: (id: number) => void;
+  fetchConversations: () => void;
+  adminId: number;
+}
+
+export default function Sidechat({ conversations, onSelectConversation, fetchConversations, adminId }: SidechatProps) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false); // Estado para abrir/fechar o modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleSelect = (id: number) => {
     setSelectedId(id);
     onSelectConversation(id);
   };
 
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
+  const handleOpenModal = () => setIsModalOpen(true);
+  const handleCloseModal = () => setIsModalOpen(false);
 
   return (
     <div className="w-full sm:w-80 bg-white shadow-lg h-full p-6 border-r border-gray-200">
@@ -45,20 +56,25 @@ export default function Sidechat({ onSelectConversation }: { onSelectConversatio
             } hover:bg-verdeAgua hover:text-black transition`}
           >
             <div>
-              <p className="font-semibold">{conversation.name}</p>
-              <p className="text-sm text-gray-500">{conversation.preview}</p>
+              <p className="font-semibold">
+                {conversation.participantA.id === adminId ? conversation.participantB.name : conversation.participantA.name}
+              </p>
+              <p className="text-sm text-gray-500">
+                {conversation.messages[0]?.text || 'Sem mensagens ainda'}
+              </p>
             </div>
-            {conversation.unread > 0 && (
-              <span className="bg-verde text-white text-xs font-bold px-2 py-1 rounded-full">
-                {conversation.unread}
-              </span>
-            )}
           </li>
         ))}
       </ul>
 
-      {/* Exibir o modal se isModalOpen for true */}
-      {isModalOpen && <ModalNovaConversa onClose={handleCloseModal} />}
+      {isModalOpen && (
+        <ModalNovaConversa
+          onClose={handleCloseModal}
+          onSelectConversation={handleSelect}
+          adminId={adminId}
+          fetchConversations={fetchConversations}
+        />
+      )}
     </div>
   );
 }

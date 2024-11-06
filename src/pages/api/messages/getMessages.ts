@@ -1,3 +1,4 @@
+// pages/api/conversations/[conversationId]/messages.ts
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 
@@ -12,9 +13,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const messages = await prisma.message.findMany({
       where: { conversationId: Number(conversationId) },
       orderBy: { createdAt: 'asc' },
+      include: {
+        sender: {
+          select: { name: true },
+        },
+      },
     });
 
-    res.status(200).json(messages);
+    // Formata as mensagens para incluir o nome do remetente
+    const formattedMessages = messages.map((message) => ({
+      id: message.id,
+      sender: message.sender.name,
+      text: message.text,
+      createdAt: message.createdAt.toISOString(),
+    }));
+
+    res.status(200).json(formattedMessages);
   } catch (error) {
     console.error('Erro ao buscar mensagens:', error);
     res.status(500).json({ message: 'Erro ao buscar mensagens.' });

@@ -1,4 +1,5 @@
-'use client'
+// modal-novaconversa.tsx
+'use client';
 import { useState, useEffect } from 'react';
 import { CloseSquare, SearchNormal1, User } from 'iconsax-react';
 import { useToast } from '@/hooks/use-toast';
@@ -9,13 +10,20 @@ type Student = {
   avatarUrl?: string | null;
 };
 
-export default function ModalNovaConversa({ onClose }: { onClose: () => void }) {
+interface ModalNovaConversaProps {
+  onClose: () => void;
+  onSelectConversation: (id: number) => void;
+  adminId: number;
+  fetchConversations: () => void;
+}
+
+export default function ModalNovaConversa({ onClose, onSelectConversation, adminId, fetchConversations }: ModalNovaConversaProps) {
   const [students, setStudents] = useState<Student[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
 
-  // Fetch students with the role "ALUNO" on component mount
+  // Função para buscar alunos
   useEffect(() => {
     const fetchStudents = async () => {
       try {
@@ -36,7 +44,7 @@ export default function ModalNovaConversa({ onClose }: { onClose: () => void }) 
     fetchStudents();
   }, []);
 
-  // Filter students based on the search term
+  // Função para atualizar `filteredStudents` com base no `searchTerm`
   useEffect(() => {
     const filtered = students.filter(student =>
       student.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -44,18 +52,39 @@ export default function ModalNovaConversa({ onClose }: { onClose: () => void }) 
     setFilteredStudents(filtered);
   }, [searchTerm, students]);
 
+  // Definição da função `handleSearch`
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
-  const handleStartConversation = (userId: number) => {
-    console.log(`Iniciando conversa com o aluno ID: ${userId}`);
-    toast({
-      title: 'Conversa iniciada!',
-      description: `Conversa com o aluno ID: ${userId} foi iniciada.`,
-      variant: 'success',
-    });
-    onClose();
+  const handleStartConversation = async (studentId: number) => {
+    try {
+      const response = await fetch('/api/conversations/createOrGetConversation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ participantAId: adminId, participantBId: studentId }),
+      });
+
+      if (!response.ok) throw new Error('Erro ao iniciar conversa');
+      const conversation = await response.json();
+
+      toast({
+        title: 'Conversa iniciada!',
+        description: `Conversa com o aluno ID: ${studentId} foi iniciada.`,
+        variant: 'success',
+      });
+
+      fetchConversations(); // Recarrega as conversas no Sidechat
+      onSelectConversation(conversation.id); // Seleciona a conversa criada
+      onClose(); // Fecha o modal
+    } catch (error) {
+      console.error('Erro ao iniciar conversa:', error);
+      toast({
+        title: 'Erro ao iniciar conversa',
+        description: 'Não foi possível iniciar a conversa.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -67,7 +96,6 @@ export default function ModalNovaConversa({ onClose }: { onClose: () => void }) 
         
         <h2 className="text-xl font-semibold mb-4">Iniciar Nova Conversa</h2>
 
-        {/* Search Bar */}
         <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-white shadow-sm mb-4">
           <SearchNormal1 size="20" className="text-gray-500" />
           <input
@@ -75,11 +103,10 @@ export default function ModalNovaConversa({ onClose }: { onClose: () => void }) 
             placeholder="Pesquisar aluno"
             className="ml-3 bg-white outline-none w-full placeholder-gray-500"
             value={searchTerm}
-            onChange={handleSearch}
+            onChange={handleSearch} // Atualizando o valor com handleSearch
           />
         </div>
 
-        {/* Lista de alunos com foto de perfil e nome */}
         <ul className="space-y-3 overflow-y-auto max-h-60">
           {filteredStudents.map((student) => (
             <li
@@ -89,11 +116,7 @@ export default function ModalNovaConversa({ onClose }: { onClose: () => void }) 
             >
               <div className="flex items-center space-x-3">
                 {student.avatarUrl ? (
-                  <img
-                    src={student.avatarUrl}
-                    alt={student.name}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
+                  <img src={student.avatarUrl} alt={student.name} className="w-10 h-10 rounded-full object-cover" />
                 ) : (
                   <User size="40" className="text-gray-400" />
                 )}
