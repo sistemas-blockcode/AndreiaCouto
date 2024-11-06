@@ -8,7 +8,6 @@ import { Check } from 'iconsax-react';
 interface Lesson {
   id: number;
   title: string;
-  videoUrl: string;
 }
 
 interface Course {
@@ -24,6 +23,7 @@ export default function CoursePlayer() {
 
   const [course, setCourse] = useState<Course | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null); // URL do vídeo como blob
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -45,7 +45,27 @@ export default function CoursePlayer() {
     fetchCourseData();
   }, [courseId, router]);
 
-  const handleLessonSelect = (lesson: Lesson) => setSelectedLesson(lesson);
+  const handleLessonSelect = (lesson: Lesson) => {
+    setSelectedLesson(lesson);
+    fetchVideoData(lesson.id);
+  };
+
+  const fetchVideoData = async (lessonId: number) => {
+    try {
+      const response = await fetch(`/api/courses/${courseId}/lessons/${lessonId}/video`);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      setVideoUrl(url);
+    } catch (error) {
+      console.error("Erro ao buscar o vídeo:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedLesson) {
+      fetchVideoData(selectedLesson.id);
+    }
+  }, [selectedLesson]);
 
   if (!course || !selectedLesson) return <div>Carregando...</div>;
 
@@ -62,12 +82,14 @@ export default function CoursePlayer() {
         <div className="flex-1 pr-6">
           <h2 className="text-xl font-bold mb-4">{course.title}</h2>
           <video
-            src={selectedLesson.videoUrl}
+            src={videoUrl || ''}
             controls
-            controlsList="nodownload" // Desativa a opção de download
+            controlsList="nodownload"
             className="w-full h-[450px] rounded-md shadow-md mb-4 bg-gray-900"
-            onTimeUpdate={(e) => setProgress((e.currentTarget.currentTime / e.currentTarget.duration) * 100)}
-            onContextMenu={(e) => e.preventDefault()} // Bloqueia o menu de contexto
+            onTimeUpdate={(e) =>
+              setProgress((e.currentTarget.currentTime / e.currentTarget.duration) * 100)
+            }
+            onContextMenu={(e) => e.preventDefault()}
           >
             Seu navegador não suporta o elemento de vídeo.
           </video>

@@ -21,7 +21,7 @@
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
-    "formidable": "^3.5.2",
+    "formidable": "^2.0.1",
     "iconsax-react": "^0.0.8",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.453.0",

@@ -51,7 +51,8 @@ model Lesson {
   id              Int               @id @default(autoincrement())
   title           String
   videoUrl        String?          
-  videoData       Bytes?           
+  videoData       Bytes?
+  videoType       String?           // Adicionado: Armazena o tipo MIME do vídeo, ex: "video/mp4"
   thumbnail       String
   course          Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
   courseId        Int
@@ -61,16 +62,14 @@ model Lesson {
 }
 
 model LessonProgress {
-  id         Int       @id @default(autoincrement())
-
-  
-  student    User      @relation("UserLessonProgresses", fields: [studentId], references: [id], onDelete: Cascade)
-  studentId  Int
-  lesson     Lesson    @relation("LessonLessonProgresses", fields: [lessonId], references: [id], onDelete: Cascade)
-  lessonId   Int
+  id          Int       @id @default(autoincrement())
+  student     User      @relation("UserLessonProgresses", fields: [studentId], references: [id], onDelete: Cascade)
+  studentId   Int
+  lesson      Lesson    @relation("LessonLessonProgresses", fields: [lessonId], references: [id], onDelete: Cascade)
+  lessonId    Int
   timeWatched Int      
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Conversation {
