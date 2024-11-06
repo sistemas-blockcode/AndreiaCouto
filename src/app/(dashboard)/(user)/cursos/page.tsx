@@ -1,11 +1,9 @@
-// app/student/page.tsx
+import CoursesList from '@/app/components/students/CoursList';
 export default function Page() {
     return (
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-800 mb-6">Painel do Aluno</h1>
-        <p className="text-gray-600">
-          Bem-vindo ao seu painel de controle. Aqui você pode acessar seus cursos, iniciar chats com o administrador e visualizar suas notificações.
-        </p>
+      <div className='px-2 py-3'>
+        <h1 className="text-2xl font-semibold text-gray-800 mb-6">Meus Cursos</h1>
+        <div><CoursesList /></div>
       </div>
     );
   }

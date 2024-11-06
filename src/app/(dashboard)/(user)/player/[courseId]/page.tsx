@@ -1,3 +1,4 @@
+// CoursePlayer.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -63,8 +64,10 @@ export default function CoursePlayer() {
           <video
             src={selectedLesson.videoUrl}
             controls
+            controlsList="nodownload" // Desativa a opção de download
             className="w-full h-[450px] rounded-md shadow-md mb-4 bg-gray-900"
             onTimeUpdate={(e) => setProgress((e.currentTarget.currentTime / e.currentTarget.duration) * 100)}
+            onContextMenu={(e) => e.preventDefault()} // Bloqueia o menu de contexto
           >
             Seu navegador não suporta o elemento de vídeo.
           </video>
